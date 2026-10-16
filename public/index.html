@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#08060b">
+<title>Spenctied — Vampir Köylü Online</title>
+<style>
+:root{--bg:#08060b;--panel:rgba(20,14,26,.91);--panel2:rgba(38,24,47,.94);--line:#54345f;--pink:#d84df0;--red:#f04a65;--text:#fff;--muted:#d0bfd8;--navH:78px}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{overscroll-behavior:none}
+button,input,select{font:inherit}
+button{cursor:pointer;touch-action:manipulation}
+#app{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;overflow:hidden;background:#08060b}
+#backdrop{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,4,10,.40),rgba(8,5,12,.94)),url("https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1600&q=85") center/cover no-repeat;z-index:0}
+#backdrop:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 20%,transparent,rgba(8,4,12,.65))}
+header{position:absolute;top:0;left:0;right:0;z-index:5;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px;text-align:center;background:linear-gradient(180deg,#05070cf5,#05070cb3);border-bottom:1px solid #8e4c55}
+header h1{margin:0;color:#f5e9dc;font-family:Georgia,serif;font-size:clamp(27px,7vw,40px);letter-spacing:2.4px;text-shadow:0 2px 18px #b92e4355}
+header h1 span{color:#e34d60}
+header p{margin:5px 0 8px;color:#c9b8ba;font-size:10px;letter-spacing:.08em}
+#connectionStatus{display:inline-block;border:1px solid #75515a;border-radius:30px;padding:6px 12px;font-size:12px;background:#11131bd9}
+#scrollRoot{position:absolute;z-index:1;top:148px;bottom:calc(var(--navH) + env(safe-area-inset-bottom,0px));left:0;right:0;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch}
+section.page{display:none;max-width:720px;margin:0 auto}
+section.page.active{display:block;animation:appear .22s ease-out}
+@keyframes appear{from{opacity:.5;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.card{background:linear-gradient(145deg,rgba(20,21,29,.94),rgba(9,11,17,.94));border:1px solid rgba(139,92,99,.55);border-radius:18px;padding:18px;margin:0 0 14px;box-shadow:0 14px 35px #0005}
+h2{font-family:Georgia,serif;font-size:25px;margin:0 0 14px;color:#f5e7dc}
+h3{margin:17px 0 8px;color:#e7c6c8;font-size:17px}
+p{line-height:1.45}
+.muted{color:#c9c0c6}
+.status{padding:11px 12px;border-radius:10px;background:linear-gradient(120deg,#351d26d9,#13131bf0);border:1px solid #50333d;color:#f0dfe0;line-height:1.4;margin:10px 0}
+.good{color:#75e7ae!important}.bad{color:#ff6d81!important}
+label{display:block;margin:12px 0 5px;color:#e5d5ed;font-weight:600;font-size:14px}
+input,select{width:100%;padding:13px 14px;border:1px solid #554047;border-radius:12px;background:#07090ff5;color:white;margin:3px 0 7px;font-size:16px}
+input:focus,select:focus{border-color:#e05a69;outline:none;box-shadow:0 0 0 3px #e05a6925}
+button.action{border:1px solid #d55b69;background:linear-gradient(135deg,#a52c42,#641b2d);color:white;border-radius:12px;padding:13px 14px;font-weight:800;width:100%;margin:5px 0;box-shadow:0 5px 20px #6c172933}
+button.secondary{background:linear-gradient(135deg,#262630,#151721);border-color:#57444d}
+button.danger{background:linear-gradient(135deg,#8d1f34,#4e1424);border-color:#b5485b}
+button:disabled{opacity:.42;cursor:not-allowed}
+.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}
+.hero{min-height:220px;border-radius:18px;padding:20px 16px;margin-bottom:14px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(0deg,#04060bf7,#05070c1f),url("https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=1500&q=90") center/cover;border:1px solid #89505a}
+.hero .eyebrow{color:#ff9eaa;text-transform:uppercase;letter-spacing:2.5px;font-size:11px;font-weight:800}
+.hero h2{font-size:clamp(26px,7vw,34px);margin:4px 0}
+.hero p{margin:0;color:#e5d9e9;font-size:14px}
+.scene{height:130px;border-radius:15px;margin-bottom:14px;background:linear-gradient(0deg,#05070ccc,#05070c0a),url("https://images.unsplash.com/photo-1448375240586-882707db8885?auto=format&fit=crop&w=1500&q=85") center/cover;border:1px solid #75515a;display:flex;align-items:flex-end;padding:12px;font-weight:800}
+.player{background:linear-gradient(115deg,#272128f7,#11131bf7);border:1px solid #51414a;border-radius:13px;padding:12px;margin:7px 0}
+.badge{display:inline-block;background:#4b2b59;border-radius:6px;padding:3px 6px;font-size:11px;margin:4px 4px 0 0;color:#f4ddfb}
+.dead{opacity:.55}
+.avatar-picker{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0}
+.avatar-choice{border:1px solid #5b3b67!important;background:#08060be6!important;border-radius:12px!important;padding:9px 4px!important;min-height:72px;color:#fff}
+.avatar-choice .avatar-emoji{display:block;font-size:27px}
+.avatar-choice small{display:block;font-size:11px;color:#d0bfd8;margin-top:4px}
+.avatar-choice.selected{border-color:#f04a65!important;box-shadow:0 0 0 2px #f04a6544;background:#351b40!important}
+.avatar-preview{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid #54345f;border-radius:12px;background:#120d18}
+.avatar-preview img{width:56px;height:56px;object-fit:cover;border-radius:12px}
+.avatar-preview .avatar-emoji{font-size:36px;width:56px;text-align:center}
+.chatbox{height:210px;overflow-y:auto;background:#08050cdc;border:1px solid #34233c;border-radius:12px;padding:10px}
+.chatline,.eventline{padding:7px 0;border-bottom:1px solid #302238;overflow-wrap:anywhere}
+#adminScreen{border-color:#8e5e28}
+#bottomNav{position:absolute;z-index:10;left:0;right:0;bottom:0;display:flex;justify-content:space-around;gap:2px;height:calc(var(--navH) + env(safe-area-inset-bottom,0px));padding:6px 8px;background:#08050bf7;border-top:1px solid #55365e}
+.navbtn{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:0;border-radius:13px;background:transparent;color:#b9a9c2;font-size:12px;font-weight:700;padding:5px 2px}
+.navbtn .icon{font-size:23px}
+.navbtn.active{background:#351b40;color:#f09dff}
+.hidden{display:none!important}
+#toast{position:fixed;z-index:30;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);padding:12px;background:#2d1836;border:1px solid #80518c;border-radius:12px;display:none}
+@media(min-width:700px){#scrollRoot{padding-left:24px;padding-right:24px}}
+@media(max-height:650px){header{padding-bottom:7px}header p{display:none}#scrollRoot{top:100px}}
+.sp-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.sp-stat{padding:12px 8px;border:1px solid #554047;background:#11131b;border-radius:12px;text-align:center}
+.sp-stat b{display:block;font-size:20px;color:#ffb2bb}
+.sp-item{border:1px solid #554047;background:#11131b;border-radius:12px;padding:12px;margin:8px 0}
+.sp-item b{display:block;margin-bottom:5px}
+.sp-item small{display:block;color:#c9c0c6;margin-bottom:8px}
+.sp-progress{height:8px;background:#28232b;border-radius:20px;overflow:hidden;margin-top:8px}
+.sp-progress div{height:100%;width:0;background:linear-gradient(90deg,#a52c42,#ff9eaa)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="backdrop"></div>
+  <header>
+    <h1>🩸 SPENCTIED</h1>
+    <p>VAMPİR KÖYLÜ ONLINE · GÜVEN, ŞÜPHE VE STRATEJİ</p>
+    <div id="connectionStatus">● Bağlantı bekleniyor</div>
+  </header>
+
+  <div id="scrollRoot">
+    <section class="page active" id="page-home">
+      <div class="hero">
+        <div class="eyebrow">Gece başladı</div>
+        <h2>Köyüne güveniyor musun?</h2>
+        <p>Vampirleri bul, köyünü koru ve efsaneni yaz.</p>
+      </div>
+      <div class="card">
+        <h2>Oyuna Giriş</h2>
+        <p class="muted">Hesabınla giriş yap veya yeni bir hesap oluştur.</p>
+        <label for="username">Oyuncu adı</label>
+        <input id="username" maxlength="20" placeholder="Oyuncu adını yaz">
+        <label for="password">Şifre</label>
+        <input id="password" type="password" maxlength="100" placeholder="Şifreni yaz">
+        <div class="row">
+          <button class="action" id="loginBtn">Giriş Yap</button>
+          <button class="action secondary" id="registerBtn">Kayıt Ol</button>
+        </div>
+        <div id="authMessage" class="status">Oyuna başlamak için giriş yap.</div>
+      </div>
+      <div class="card">
+        <h3>🌙 Spenctied Dünyası</h3>
+        <p class="muted">Arkadaşlarınla odalara katıl, rollerini gizli tut ve gündüz tartışmalarında vampirleri ortaya çıkar.</p>
+        <div class="sp-stats">
+          <div class="sp-stat"><b>🪙</b><span>Jeton</span></div>
+          <div class="sp-stat"><b>👑</b><span>Unvanlar</span></div>
+          <div class="sp-stat"><b>🩸</b><span>Roller</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-rooms">
+      <div class="card">
+        <h2>🏰 Aktif Odalar</h2>
+        <p class="muted">Bir odaya katıl veya kendi oyununu oluştur.</p>
+        <button class="action" id="refreshRooms">↻ Odaları Yenile</button>
+        <div id="roomList" class="status">Oda listesi bağlantı kurulunca burada görünür.</div>
+      </div>
+      <div class="card">
+        <h2>Oda Kur</h2>
+        <label for="roomName">Oda adı</label>
+        <input id="roomName" maxlength="30" placeholder="Örn. Kızıl Gece">
+        <label for="maxPlayers">Maksimum oyuncu</label>
+        <select id="maxPlayers">
+          <option value="5">5 oyuncu</option>
+          <option value="6">6 oyuncu</option>
+          <option value="8" selected>8 oyuncu</option>
+          <option value="10">10 oyuncu</option>
+          <option value="12">12 oyuncu</option>
+        </select>
+        <label for="botCount">Bot sayısı</label>
+        <select id="botCount">
+          <option value="0">Botsuz</option>
+          <option value="1">1 bot</option>
+          <option value="2">2 bot</option>
+          <option value="3">3 bot</option>
+          <option value="4">4 bot</option>
+          <option value="5">5 bot</option>
+        </select>
+        <button class="action" id="createRoom">🩸 Oda Oluştur</button>
+        <div id="roomMessage" class="status">Oda kurmak için giriş yapmalısın.</div>
+      </div>
+    </section>
+
+    <section class="page" id="page-game">
+      <div class="card">
+        <h2 id="gameTitle">🌑 Oyun Alanı</h2>
+        <div class="scene">🕯️ Köyün kaderi senin ellerinde</div>
+        <div class="sp-stats">
+          <div class="sp-stat"><b id="playerCount">0</b><span>Oyuncu</span></div>
+          <div class="sp-stat"><b id="phaseLabel">—</b><span>Faz</span></div>
+          <div class="sp-stat"><b id="timerLabel">—</b><span>Süre</span></div>
+        </div>
+        <div id="gameMessage" class="status">Bir odaya katılarak oyuna başla.</div>
+        <h3>👥 Oyuncular</h3>
+        <div id="playersList"></div>
+      </div>
+      <div class="card">
+        <h3>💬 Köy Sohbeti</h3>
+        <div id="chatMessages" class="chatbox"></div>
+        <div class="row">
+          <input id="chatInput" maxlength="300" placeholder="Mesajını yaz..." aria-label="Sohbet mesajı">
+          <button id="sendChat" class="action">Gönder</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>⚔️ Oyun İşlemleri</h3>
+        <div id="gameActions">
+          <p class="muted">Oyun başladığında rolüne uygun işlemler burada görünür.</p>
+        </div>
+        <button id="startGame" class="action">Oyunu Başlat</button>
+        <button id="leaveRoom" class="action danger">Odadan Ayrıl</button>
+      </div>
+    </section>
+
+    <section class="page" id="page-profile">
+      <div class="card">
+        <h2>👑 Profilim</h2>
+        <div class="avatar-preview">
+          <span class="avatar-emoji" id="profileAvatar">🧛</span>
+          <div>
+            <b id="profileName">Misafir</b>
+            <div class="muted" id="profileTitle">Yeni Oyuncu</div>
+            <div class="badge" id="levelBadge">Seviye 1</div>
+          </div>
+        </div>
+        <div class="sp-progress"><div id="xpProgress"></div></div>
+        <p class="muted" id="xpText">0 / 100 XP</p>
+        <div class="sp-stats">
+          <div class="sp-stat"><b id="coinBalance">0</b><span>🪙 Jeton</span></div>
+          <div class="sp-stat"><b id="winCount">0</b><span>🏆 Galibiyet</span></div>
+          <div class="sp-stat"><b id="gameCount">0</b><span>🎮 Oyun</span></div>
+        </div>
+        <h3>Karakterini Seç</h3>
+        <div class="avatar-picker" id="avatarPicker">
+          <button class="avatar-choice selected" data-avatar="🧛"><span class="avatar-emoji">🧛</span><small>Vampir</small></button>
+          <button class="avatar-choice" data-avatar="🧙"><span class="avatar-emoji">🧙</span><small>Kâhin</small></button>
+          <button class="avatar-choice" data-avatar="🧑‍🌾"><span class="avatar-emoji">🧑‍🌾</span><small>Köylü</small></button>
+          <button class="avatar-choice" data-avatar="🩺"><span class="avatar-emoji">🩺</span><small>Doktor</small></button>
+          <button class="avatar-choice" data-avatar="🦇"><span class="avatar-emoji">🦇</span><small>Yarasa</small></button>
+          <button class="avatar-choice" data-avatar="👑"><span class="avatar-emoji">👑</span><small>Kral</small></button>
+          <button class="avatar-choice" data-avatar="🕵️"><span class="avatar-emoji">🕵️</span><small>Dedektif</small></button>
+          <button class="avatar-choice" data-avatar="💀"><span class="avatar-emoji">💀</span><small>Gölge</small></button>
+        </div>
+        <label for="avatarUpload">Profil fotoğrafı yükle</label>
+        <input id="avatarUpload" type="file" accept="image/*">
+        <div class="status">⚠️ Avatar seçimi oyun rolünü değiştirmez; rol bilgisi gizli kalmalıdır.</div>
+      </div>
+    </section>
+
+    <section class="page" id="page-shop">
+      <div class="card">
+        <h2>🛒 Kızıl Mağaza</h2>
+        <p class="muted">Jetonlarını harcayarak profilini özelleştir.</p>
+        <div class="status">Bakiyen: <b id="shopBalance">0</b> 🪙</div>
+        <div id="shopItems"></div>
+      </div>
+      <div class="card">
+        <h2>🏆 Unvan Koleksiyonu</h2>
+        <p class="muted">Başarılarını tamamla, unvanlarını aç ve profilinde sergile.</p>
+        <div id="titleItems"></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-settings">
+      <div class="card">
+        <h2>⚙️ Ayarlar</h2>
+        <label><input id="musicToggle" type="checkbox" style="width:auto"> Müzik</label>
+        <label><input id="soundToggle" type="checkbox" style="width:auto" checked> Ses efektleri</label>
+        <label><input id="micToggle" type="checkbox" style="width:auto"> Mikrofon arayüzü</label>
+        <div class="status">Mikrofon düğmesi gerçek zamanlı ses aktarımı sağlamaz; sesli sohbet için ayrıca WebRTC gerekir.</div>
+        <button id="logoutBtn" class="action danger">Çıkış Yap</button>
+      </div>
+      <div class="card" id="adminScreen">
+        <h2>🛡️ Sistem Bilgisi</h2>
+        <p class="muted">Bu alan yönetim paneli değildir; yönetici işlemleri sunucuda doğrulanmalıdır.</p>
+        <div id="systemMessage" class="status">Sistem beklemede.</div>
+      </div>
+    </section>
+  </div>
+
+  <nav id="bottomNav">
+    <button class="navbtn active" data-page="home"><span class="icon">🏠</span><span>Ana Sayfa</span></button>
+    <button class="navbtn" data-page="rooms"><span class="icon">🏰</span><span>Odalar</span></button>
+    <button class="navbtn" data-page="game"><span class="icon">🩸</span><span>Oyun</span></button>
+    <button class="navbtn" data-page="profile"><span class="icon">👑</span><span>Profil</span></button>
+    <button class="navbtn" data-page="shop"><span class="icon">🪙</span><span>Mağaza</span></button>
+    <button class="navbtn" data-page="settings"><span class="icon">⚙️</span><span>Ayarlar</span></button>
+  </nav>
+  <div id="toast" role="status"></div>
+</div>
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+const STORAGE_KEY = "spenctied_profile_v1";
+
+const catalog = [
+  {id:"red_aura",name:"Kızıl Aura",desc:"Profiline kızıl bir hava kat.",price:250,icon:"🔴"},
+  {id:"bat_frame",name:"Yarasa Çerçevesi",desc:"Karanlık bir profil çerçevesi.",price:500,icon:"🦇"},
+  {id:"royal_crown",name:"Kraliyet Tacı",desc:"Asil oyuncular için özel görünüm.",price:1000,icon:"👑"},
+  {id:"shadow",name:"Gölge Efekti",desc:"Gizemli profil görünümü.",price:750,icon:"🌑"},
+  {id:"vip",name:"VIP Rozeti",desc:"Profilinde sergilenen özel rozet.",price:1500,icon:"💎"}
+];
+
+const titleCatalog = [
+  {id:"new_player",name:"Yeni Oyuncu",desc:"Spenctied'e hoş geldin.",icon:"🌙",price:0},
+  {id:"village_legend",name:"Köyün Efsanesi",desc:"Köylü galibiyetleriyle açılır.",icon:"🏆",price:500},
+  {id:"blood_lord",name:"Kan Lordu",desc:"Vampirlerin karanlık hükümdarı.",icon:"🩸",price:1000},
+  {id:"night_hunter",name:"Gece Avcısı",desc:"Gecenin gizemini çöz.",icon:"🐺",price:750},
+  {id:"seer",name:"Kâhin",desc:"Şüpheleri gerçeğe dönüştür.",icon:"🔮",price:600},
+  {id:"spenctied_legend",name:"Spenctied Efsanesi",desc:"Özel koleksiyon unvanı.",icon:"👑",price:2500}
+];
+
+let profile = loadProfile();
+let selectedAvatar = profile.avatar || "🧛";
+let currentUser = null;
+let socket = null;
+let currentRoom = null;
+let gameState = null;
+let reconnectTimer = null;
+
+function defaultProfile(){
+  return {
+    coins:100,
+    xp:0,
+    level:1,
+    wins:0,
+    games:0,
+    avatar:"🧛",
+    title:"new_player",
+    ownedItems:[],
+    ownedTitles:["new_player"],
+    dailyDate:"",
+    lastReward:0
+  };
+}
+
+function loadProfile(){
+  try{
+    const saved=localStorage.getItem(STORAGE_KEY);
+    return saved ? {...defaultProfile(),...JSON.parse(saved)} : defaultProfile();
+  }catch(e){
+    return defaultProfile();
+  }
+}
+
+function saveProfile(){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(profile));
+  renderProfile();
+}
+
+function escapeHTML(value){
+  return String(value).replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function toast(message){
+  const el=$("toast");
+  el.textContent=message;
+  el.style.display="block";
+  clearTimeout(toast.timer);
+  toast.timer=setTimeout(()=>el.style.display="none",2800);
+}
+
+function showPage(name){
+  document.querySelectorAll("section.page").forEach(page=>{
+    page.classList.toggle("active",page.id==="page-"+name);
+  });
+  document.querySelectorAll(".navbtn").forEach(btn=>{
+    btn.classList.toggle("active",btn.dataset.page===name);
+  });
+  $("scrollRoot").scrollTop=0;
+}
+
+document.querySelectorAll(".navbtn").forEach(btn=>{
+  btn.addEventListener("click",()=>showPage(btn.dataset.page));
+});
+
+function renderProfile(){
+  $("profileAvatar").textContent=selectedAvatar;
+  $("profileName").textContent=currentUser?.username || $("username").value.trim() || "Misafir";
+  const activeTitle=titleCatalog.find(t=>t.id===profile.title);
+  $("profileTitle").textContent=activeTitle ? activeTitle.icon+" "+activeTitle.name : "Yeni Oyuncu";
+  $("levelBadge").textContent="Seviye "+profile.level;
+  $("coinBalance").textContent=profile.coins;
+  $("shopBalance").textContent=profile.coins;
+  $("winCount").textContent=profile.wins;
+  $("gameCount").textContent=profile.games;
+
+  const needed=profile.level*100;
+  $("xpProgress").style.width=Math.min(100,profile.xp/needed*100)+"%";
+  $("xpText").textContent=profile.xp+" / "+needed+" XP";
+}
+
+function renderShop(){
+  $("shopItems").innerHTML=catalog.map(item=>{
+    const owned=profile.ownedItems.includes(item.id);
+    return `<div class="sp-item">
+      <b>${item.icon} ${escapeHTML(item.name)}</b>
+      <small>${escapeHTML(item.desc)}</small>
+      <button class="action ${owned?"secondary":""}" data-buy="${item.id}" ${owned?"disabled":""}>
+        ${owned?"Satın Alındı":"🪙 "+item.price+" Jeton · Satın Al"}
+      </button>
+    </div>`;
+  }).join("");
+
+  $("titleItems").innerHTML=titleCatalog.map(item=>{
+    const owned=profile.ownedTitles.includes(item.id);
+    const active=profile.title===item.id;
+    return `<div class="sp-item">
+      <b>${item.icon} ${escapeHTML(item.name)} ${active?"✓":""}</b>
+      <small>${escapeHTML(item.desc)}</small>
+      <button class="action ${owned?"secondary":""}" data-title="${item.id}" ${active?"disabled":""}>
+        ${active?"Kuşanıldı":owned?"Unvanı Kuşan":"🪙 "+item.price+" Jeton · Unvanı Aç"}
+      </button>
+    </div>`;
+  }).join("");
+}
+
+$("shopItems").addEventListener("click",e=>{
+  const btn=e.target.closest("[data-buy]");
+  if(!btn)return;
+  const item=catalog.find(i=>i.id===btn.dataset.buy);
+  if(!item||profile.ownedItems.includes(item.id))return;
+  if(profile.coins<item.price){
+    toast("Yeterli jetonun yok! 🪙");
+    return;
+  }
+  profile.coins-=item.price;
+  profile.ownedItems.push(item.id);
+  saveProfile();
+  renderShop();
+  toast(item.name+" envanterine eklendi!");
+});
+
+$("titleItems").addEventListener("click",e=>{
+  const btn=e.target.closest("[data-title]");
+  if(!btn)return;
+  const item=titleCatalog.find(t=>t.id===btn.dataset.title);
+  if(!item)return;
+
+  if(!profile.ownedTitles.includes(item.id)){
+    if(profile.coins<item.price){
+      toast("Bu unvan için yeterli jetonun yok!");
+      return;
+    }
+    profile.coins-=item.price;
+    profile.ownedTitles.push(item.id);
+  }
+
+  profile.title=item.id;
+  saveProfile();
+  renderShop();
+  toast(item.name+" unvanını kuşandın! 👑");
+});
+
+document.querySelectorAll(".avatar-choice").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    selectedAvatar=btn.dataset.avatar;
+    profile.avatar=selectedAvatar;
+    document.querySelectorAll(".avatar-choice").forEach(b=>{
+      b.classList.toggle("selected",b===btn);
+    });
+    saveProfile();
+  });
+});
+
+$("avatarUpload").addEventListener("change",e=>{
+  const file=e.target.files?.[0];
+  if(!file)return;
+  if(!file.type.startsWith("image/")){
+    toast("Lütfen bir resim seç.");
+    return;
+  }
+  if(file.size>2*1024*1024){
+    toast("Resim en fazla 2 MB olabilir.");
+    return;
+  }
+  const reader=new FileReader();
+  reader.onload=()=>{
+    profile.avatarImage=reader.result;
+    $("profileAvatar").innerHTML="";
+    const img=document.createElement("img");
+    img.src=reader.result;
+    img.alt="Profil fotoğrafı";
+    img.style.width="56px";
+    img.style.height="56px";
+    img.style.objectFit="cover";
+    img.style.borderRadius="12px";
+    $("profileAvatar").replaceWith(img);
+    img.id="profileAvatar";
+    saveProfile();
+  };
+  reader.readAsDataURL(file);
+});
+
+function dailyReward(){
+  const today=new Date().toLocaleDateString("sv-SE");
+  if(profile.dailyDate===today){
+    toast("Günlük ödülünü bugün zaten aldın. 🎁");
+    return;
+  }
+  profile.dailyDate=today;
+  profile.coins+=100;
+  saveProfile();
+  toast("Günlük ödülün: +100 jeton! 🎁");
+}
+
+const rewardButton=document.createElement("button");
+rewardButton.className="action";
+rewardButton.textContent="🎁 Günlük Ödülünü Al";
+rewardButton.addEventListener("click",dailyReward);
+$("page-shop").querySelector(".card").prepend(rewardButton);
+
+function addXP(amount){
+  profile.xp+=amount;
+  let needed=profile.level*100;
+  while(profile.xp>=needed){
+    profile.xp-=needed;
+    profile.level++;
+    profile.coins+=50;
+    needed=profile.level*100;
+    toast("Seviye atladın! +50 jeton 👑");
+  }
+  saveProfile();
+}
+
+function demoWin(){
+  profile.wins++;
+  profile.games++;
+  profile.coins+=25;
+  addXP(40);
+  toast("Demo ödülü: +25 jeton, +40 XP");
+}
+
+renderProfile();
+renderShop();
+</script>
+<script>
+/* SPENCTIED — OYUN BAĞLANTISI */
+
+function setConnection(text, good=false){
+  $("connectionStatus").textContent=(good?"● ":"● ")+text;
+  $("connectionStatus").style.color=good?"#75e7ae":"#ff9eaa";
+}
+
+function authMessage(text, good=false){
+  $("authMessage").textContent=text;
+  $("authMessage").className="status "+(good?"good":"bad");
+}
+
+function connectSocket(token){
+  if(typeof io!=="function"){
+    setConnection("Sunucu bağlantısı hazır değil");
+    $("systemMessage").textContent="Socket.IO istemcisi yüklenemedi.";
+    return;
+  }
+
+  if(socket) socket.disconnect();
+
+  socket=io({
+    auth:{token},
+    reconnection:true,
+    reconnectionAttempts:10,
+    reconnectionDelay:1500
+  });
+
+  socket.on("connect",()=>{
+    setConnection("Sunucuya bağlandı",true);
+    $("systemMessage").textContent="Bağlantı kuruldu.";
+    toast("Spenctied sunucusuna bağlandın!");
+  });
+
+  socket.on("connect_error",err=>{
+    setConnection("Bağlantı hatası");
+    $("systemMessage").textContent="Bağlantı hatası: "+(err.message||"Bilinmeyen hata");
+  });
+
+  socket.on("disconnect",()=>{
+    setConnection("Bağlantı kesildi");
+  });
+
+  socket.on("toast",data=>{
+    toast(typeof data==="string"?data:(data?.message||""));
+  });
+
+  socket.on("state",state=>{
+    gameState=state;
+    renderGameState(state);
+  });
+
+  socket.on("events",events=>{
+    if(!Array.isArray(events))return;
+    const box=$("chatMessages");
+    events.forEach(event=>{
+      const line=document.createElement("div");
+      line.className="eventline";
+      line.textContent=typeof event==="string"?event:(event.message||JSON.stringify(event));
+      box.appendChild(line);
+    });
+    box.scrollTop=box.scrollHeight;
+  });
+
+  socket.on("chatMessage",message=>{
+    addChatMessage(message);
+  });
+}
+
+async function authRequest(endpoint){
+  const username=$("username").value.trim();
+  const password=$("password").value;
+
+  if(!username||!password){
+    authMessage("Oyuncu adı ve şifre gerekli.");
+    return;
+  }
+
+  try{
+    const response=await fetch(endpoint,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({username,password})
+    });
+
+    const data=await response.json();
+
+    if(!response.ok){
+      authMessage(data.error||data.message||"İşlem başarısız.");
+      return;
+    }
+
+    const token=data.token||data.accessToken;
+
+    if(!token){
+      authMessage("Sunucu oturum anahtarı göndermedi.");
+      return;
+    }
+
+    currentUser={username,token};
+    localStorage.setItem("spenctied_session",JSON.stringify(currentUser));
+
+    $("profileName").textContent=username;
+    authMessage("Hoş geldin, "+username+"!",true);
+    connectSocket(token);
+    renderProfile();
+    showPage("rooms");
+  }catch(error){
+    authMessage("Sunucuya ulaşılamadı. Sunucunun çalıştığını kontrol et.");
+  }
+}
+
+$("loginBtn").addEventListener("click",()=>authRequest("/api/login"));
+$("registerBtn").addEventListener("click",()=>authRequest("/api/register"));
+
+function emit(event,data={}){
+  if(!socket||!socket.connected){
+    toast("Önce sunucuya bağlanmalısın.");
+    return;
+  }
+  socket.emit(event,data);
+}
+
+$("createRoom").addEventListener("click",()=>{
+  const name=$("roomName").value.trim();
+  if(!name){
+    $("roomMessage").textContent="Önce bir oda adı yaz.";
+    return;
+  }
+
+  emit("createRoom",{
+    name,
+    maxPlayers:Number($("maxPlayers").value),
+    botCount:Number($("botCount").value)
+  });
+});
+
+$("refreshRooms").addEventListener("click",()=>{
+  emit("getRooms");
+  toast("Oda listesi yenileme isteği gönderildi.");
+});
+
+$("startGame").addEventListener("click",()=>{
+  emit("startGame");
+});
+
+$("leaveRoom").addEventListener("click",()=>{
+  emit("leaveRoom");
+  currentRoom=null;
+  $("gameMessage").textContent="Odadan ayrılma isteği gönderildi.";
+});
+
+function addChatMessage(message){
+  const box=$("chatMessages");
+  const line=document.createElement("div");
+  line.className="chatline";
+
+  if(typeof message==="string"){
+    line.textContent=message;
+  }else{
+    const name=message.username||message.name||"Oyuncu";
+    const text=message.message||message.text||"";
+    line.textContent=name+": "+text;
+  }
+
+  box.appendChild(line);
+  box.scrollTop=box.scrollHeight;
+}
+
+function sendChat(){
+  const input=$("chatInput");
+  const message=input.value.trim();
+  if(!message)return;
+
+  emit("chatMessage",{message});
+  input.value="";
+}
+
+$("sendChat").addEventListener("click",sendChat);
+$("chatInput").addEventListener("keydown",event=>{
+  if(event.key==="Enter")sendChat();
+});
+
+function renderGameState(state){
+  if(!state||typeof state!=="object")return;
+
+  const players=state.players||[];
+  $("playerCount").textContent=players.length;
+  $("gameTitle").textContent=state.roomName||state.name||"🌑 Oyun Alanı";
+  $("phaseLabel").textContent=state.phase||"Bekleme";
+  $("timerLabel").textContent=state.timer??"—";
+
+  $("playersList").innerHTML="";
+
+  players.forEach(player=>{
+    const item=document.createElement("div");
+    item.className="player"+(player.alive===false?" dead":"");
+
+    const name=document.createElement("b");
+    name.textContent=player.username||player.name||"Oyuncu";
+
+    const details=document.createElement("div");
+    details.className="muted";
+    details.textContent=player.alive===false?"💀 Elendi":"🕯️ Oyunda";
+
+    item.append(name,details);
+    $("playersList").appendChild(item);
+  });
+
+  $("gameMessage").textContent=state.message||"Oyun durumu güncellendi.";
+}
+
+$("logoutBtn").addEventListener("click",()=>{
+  if(socket)socket.disconnect();
+  socket=null;
+  currentUser=null;
+  currentRoom=null;
+  localStorage.removeItem("spenctied_session");
+  setConnection("Oturum kapatıldı");
+  showPage("home");
+  toast("Çıkış yapıldı.");
+});
+
+$("micToggle").addEventListener("change",event=>{
+  toast(event.target.checked
+    ?"Mikrofon arayüzü açıldı; sesli sohbet henüz etkin değil."
+    :"Mikrofon arayüzü kapatıldı.");
+});
+
+$("musicToggle").addEventListener("change",event=>{
+  toast(event.target.checked
+    ?"Müzik ayarı açıldı; henüz müzik dosyası bağlı değil."
+    :"Müzik ayarı kapatıldı.");
+});
+
+$("soundToggle").addEventListener("change",event=>{
+  toast(event.target.checked?"Ses ayarı açıldı.":"Ses ayarı kapatıldı.");
+});
+
+/* Önceden açılmış oturum varsa yeniden bağlanmayı dene. */
+try{
+  const saved=JSON.parse(localStorage.getItem("spenctied_session")||"null");
+  if(saved?.token&&saved?.username){
+    currentUser=saved;
+    $("username").value=saved.username;
+    $("profileName").textContent=saved.username;
+    connectSocket(saved.token);
+  }
+}catch(error){
+  localStorage.removeItem("spenctied_session");
+}
+
+/* İlk ekranı hazırla. */
+renderProfile();
+renderShop();
+setConnection("Giriş bekleniyor");
+</script>
+</body>
+</html>
